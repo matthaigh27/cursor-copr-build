@@ -1,7 +1,7 @@
 name: Update Copr
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
   workflow_dispatch:
 jobs:
   Update-Cursor:
@@ -38,9 +38,14 @@ jobs:
             mkdir -p ~/.config
             echo "${{ secrets.COPR_CONFIG }}" > ~/.config/copr
 
-            rpmbuild -bs cursor.spec
+            mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+            cp cursor.spec rpmbuild/SPECS/cursor.spec
+            cp "$LATEST_FILE" rpmbuild/SOURCES/
 
-            SRPM_NAME=$(echo "${LATEST_FILE}" | sed 's/\.AppImage/\.src\.rpm/')
+            rpmbuild -bs rpmbuild/SPECS/cursor.spec
+
+            # SRPM_NAME=$(echo "${LATEST_FILE}" | sed 's/\.AppImage/\.src\.rpm/')
+            SRPM_NAME=$(ls ~/rpmbuild/SRPMS/cursor-*.src.rpm)
             copr-cli build cursor ~/rpmbuild/SRPMS/${SRPM_NAME}
 
             git config --global user.email "github-actions@github.com"
