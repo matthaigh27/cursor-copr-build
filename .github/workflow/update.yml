@@ -1,0 +1,53 @@
+name: Update Copr
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+jobs:
+  Update-Cursor:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Check latest version and update spec
+        run: |
+          LATEST_FILE=$(curl -sI https://downloader.cursor.sh/linux/appImage/x64 | grep -i location | awk -F/ '{print $NF}' | tr -d '\r')
+          LATEST_VERSION=$(echo $LATEST_FILE | sed -E 's/cursor-([0-9.]+)x86_64\.AppImage/\1/')
+
+          CURRENT_VERSION=$(grep "Version:" cursor.spec | awk '{print $2}')
+
+          if [[ "$LATEST_VERSION" > "$CURRENT_VERSION" ]]; then
+            echo "New version found: $LATEST_VERSION"
+            sed -i "s/Version:        .*/Version:        $LATEST_VERSION/" cursor.spec
+            sed -i "s/Source0:        .*/Source0:        ${LATEST_FILE}/" cursor.spec
+
+            sudo apt-get update
+            sudo apt-get install -y rpm python3-pip
+
+            pip3 install copr-cli
+
+            mkdir -p ~/.config
+            echo "${{ secrets.COPR_CONFIG }}" > ~/.config/copr
+
+            rpmbuild -bs cursor.spec
+
+            SRPM_NAME=$(echo "${LATEST_FILE}" | sed 's/\.AppImage/\.src\.rpm/')
+            copr-cli build cursor ~/rpmbuild/SRPMS/${SRPM_NAME}
+
+            git config --global user.email "github-actions@github.com"
+            git config --global user.name "GitHub Actions"
+
+            git add cursor.spec
+            git commit -m "Update Cursor to version $LATEST_VERSION"
+            git push
+
+            gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+            gh release create "v${LATEST_VERSION}" \
+              --title "Cursor ${LATEST_VERSION}" \
+              --notes "Updated Cursor to version ${LATEST_VERSION}"
+          else
+            echo "Current version is up to date"
+          fi
