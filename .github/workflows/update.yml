@@ -19,7 +19,7 @@ jobs:
           LATEST_FILE=$(ls cursor-*x86_64.AppImage)
           echo "Latest file: $LATEST_FILE"
 
-          LATEST_VERSION=$(echo $LATEST_FILE | sed -E 's/cursor-([0-9.]+)-x86_64\.AppImage/\1/')
+          LATEST_VERSION=$(echo $LATEST_FILE | sed -E 's/cursor-([0-9.]+)x86_64\.AppImage/\1/')
           echo "Latest version: $LATEST_VERSION"
 
           CURRENT_VERSION=$(grep "Version:" cursor.spec | awk '{print $2}')
