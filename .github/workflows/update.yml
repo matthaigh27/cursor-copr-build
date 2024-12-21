@@ -45,7 +45,7 @@ jobs:
 
             # SRPM_NAME=$(echo "${LATEST_FILE}" | sed 's/\.AppImage/\.src\.rpm/')
             SRPM_NAME=$(ls rpmbuild/SRPMS/cursor-*.src.rpm)
-            copr-cli build cursor ${SRPM_NAME}
+            copr-cli build --nowait cursor ${SRPM_NAME}
 
             git config --global user.email "github-actions@github.com"
             git config --global user.name "GitHub Actions"
