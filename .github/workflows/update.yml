@@ -57,7 +57,7 @@ jobs:
             gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
             gh release create "v${LATEST_VERSION}" \
               --title "Cursor ${LATEST_VERSION}" \
-              --notes "Updated Cursor to version ${LATEST_VERSION}"
+              --notes "$(printf "Updated Cursor to version ${LATEST_VERSION}\n\nhttps://copr.fedorainfracloud.org/coprs/matthaigh27/cursor/")"
           else
             echo "Current version is up to date"
           fi
