@@ -3,61 +3,109 @@ on:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
+
 jobs:
-  Update-Cursor:
+  Check-Version:
     runs-on: ubuntu-latest
+    outputs:
+      latest_version: ${{ steps.check.outputs.latest_version }}
+      update_available: ${{ steps.check.outputs.update_available }}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Check latest version
+        id: check
+        shell: bash
+        run: |
+          LATEST_VERSION=$(curl -s https://download.todesktop.com/230313mzl4w4u92/latest-linux.yml | grep -m 1 '^version:' | sed 's/version: //')
+          CURRENT_VERSION=$(cat version)
+
+          if [ "$(printf '%s\n' "$CURRENT_VERSION" "$LATEST_VERSION" | sort -V | head -n1)" = "$LATEST_VERSION" ] && [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
+            echo "update_available=false" >> $GITHUB_OUTPUT
+          else
+            echo "update_available=true" >> $GITHUB_OUTPUT
+            echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+  Update-Cursor:
+    needs: Check-Version
+    if: needs.Check-Version.outputs.update_available == 'true'
+    strategy:
+      matrix:
+        arch: [x64, aarch64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Update Cursor for ${{ matrix.arch }}
+        env:
+          ARCH: ${{ matrix.arch }}
+          LATEST_VERSION: ${{ needs.Check-Version.outputs.latest_version }}
+        run: |
+          echo "Updating Cursor for architecture: $ARCH"
+
+          if [[ "$ARCH" == "x64" ]]; then
+            DOWNLOAD_URL="https://downloader.cursor.sh/linux/appImage/x64"
+          else
+            DOWNLOAD_URL="https://downloader.cursor.sh/linux/appImage/arm64"
+          fi
+
+          curl -LJO "$DOWNLOAD_URL"
+
+          LATEST_FILE=$(ls cursor*.AppImage)
+
+          sed -i \
+            -e 's|<version>|'"$LATEST_VERSION"'|g' \
+            -e 's|<source>|'"$LATEST_FILE"'|g' \
+            -e 's|<arch>|'"$ARCH"'|g' \
+            cursor.spec
+
+          echo "\n"
+          cat cursor.spec
+          echo "\n"
+
+          sudo apt-get update
+          sudo apt-get install -y rpm python3-pip
+
+          pip3 install copr-cli
+
+          mkdir -p ~/.config
+          echo "${{ secrets.COPR_CONFIG }}" > ~/.config/copr
+
+          mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+          cp cursor.spec rpmbuild/SPECS/cursor.spec
+          cp "$LATEST_FILE" rpmbuild/SOURCES/
+
+          rpmbuild -bs --define "_topdir $(pwd)/rpmbuild" --target $ARCH rpmbuild/SPECS/cursor.spec
+
+          SRPM_NAME=$(ls rpmbuild/SRPMS/cursor-*.src.rpm)
+          copr-cli build --nowait cursor ${SRPM_NAME}
+
+  Create-Release:
+    runs-on: ubuntu-latest
+    needs: [Check-Version, Update-Cursor]
+    if: needs.Check-Version.outputs.update_available == 'true'
     permissions:
       contents: write
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
 
-      - name: Check latest version and update spec
+      - name: Commit update & create release
+        env:
+          LATEST_VERSION: ${{ needs.Check-Version.outputs.latest_version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl -LJO https://downloader.cursor.sh/linux/appImage/x64
-          LATEST_FILE=$(ls cursor-*x86_64.AppImage)
-          echo "Latest file: $LATEST_FILE"
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
 
-          LATEST_VERSION=$(echo $LATEST_FILE | sed -E 's/cursor-([0-9.]+)x86_64\.AppImage/\1/')
-          echo "Latest version: $LATEST_VERSION"
+          echo "$LATEST_VERSION" > version
+          git add version
+          git commit -m "Update Cursor to version $LATEST_VERSION"
+          git push
 
-          CURRENT_VERSION=$(grep "Version:" cursor.spec | awk '{print $2}')
-          echo "Current version: $CURRENT_VERSION"
-
-          if [[ "$LATEST_VERSION" > "$CURRENT_VERSION" ]]; then
-            echo "New version found: $LATEST_VERSION"
-            sed -i "s/Version:.*/Version:        $LATEST_VERSION/" cursor.spec
-            sed -i "s/^Source0:.*$/Source0:        ${LATEST_FILE}/" cursor.spec
-
-            sudo apt-get update
-            sudo apt-get install -y rpm python3-pip
-
-            pip3 install copr-cli
-
-            mkdir -p ~/.config
-            echo "${{ secrets.COPR_CONFIG }}" > ~/.config/copr
-
-            mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
-            cp cursor.spec rpmbuild/SPECS/cursor.spec
-            cp "$LATEST_FILE" rpmbuild/SOURCES/
-
-            rpmbuild -bs --define "_topdir $(pwd)/rpmbuild" rpmbuild/SPECS/cursor.spec
-
-            # SRPM_NAME=$(echo "${LATEST_FILE}" | sed 's/\.AppImage/\.src\.rpm/')
-            SRPM_NAME=$(ls rpmbuild/SRPMS/cursor-*.src.rpm)
-            copr-cli build --nowait cursor ${SRPM_NAME}
-
-            git config --global user.email "github-actions@github.com"
-            git config --global user.name "GitHub Actions"
-
-            git add cursor.spec
-            git commit -m "Update Cursor to version $LATEST_VERSION"
-            git push
-
-            gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
-            gh release create "v${LATEST_VERSION}" \
-              --title "Cursor ${LATEST_VERSION}" \
-              --notes "$(printf "Updated Cursor to version ${LATEST_VERSION}\n\nhttps://copr.fedorainfracloud.org/coprs/matthaigh27/cursor/")"
-          else
-            echo "Current version is up to date"
-          fi
+          gh release create "v$LATEST_VERSION" \
+            --title "Cursor $LATEST_VERSION" \
+            --notes "$(printf "Updated Cursor to version $LATEST_VERSION\n\nhttps://copr.fedorainfracloud.org/coprs/matthaigh27/cursor/")"

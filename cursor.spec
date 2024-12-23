@@ -1,14 +1,13 @@
 Name:           cursor
-Version:        0.44.8
+Version:        <version>
 Release:        1%{?dist}
 Summary:        Cursor - The AI Code Editor
 
 License:        LicenseRef-Proprietary  # Update according to the actual license
 URL:            https://www.cursor.com/
-Source0:        cursor-0.44.8x86_64.AppImage
+Source0:        <source>
 
-BuildArch:      x86_64
-ExclusiveArch:  x86_64
+ExclusiveArch:  <arch>
 
 %description
 Built to make you extraordinarily productive, Cursor is the best way to code with AI.
@@ -26,9 +25,6 @@ chmod +x %{SOURCE0}
 mkdir -p %{buildroot}/usr/local/cursor/
 cp -r squashfs-root/* %{buildroot}/usr/local/cursor/
 
-mkdir -p %{buildroot}/lib64
-cp squashfs-root/libffmpeg.so %{buildroot}/lib64/libffmpeg.so
-
 mkdir -p %{buildroot}/usr/share/icons/hicolor/
 cp -r squashfs-root/usr/share/icons/hicolor/* %{buildroot}/usr/share/icons/hicolor/
 
@@ -45,7 +41,6 @@ gtk-update-icon-cache /usr/share/icons/hicolor
 chmod -R 755 /usr/local/cursor/resources
 
 %files
-/lib64/libffmpeg.so
 /usr/local/cursor/*
 /usr/local/bin/cursor
 /usr/share/applications/cursor.desktop
