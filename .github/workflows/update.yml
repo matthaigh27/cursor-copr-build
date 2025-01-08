@@ -57,7 +57,7 @@ jobs:
           cp cursor.spec rpmbuild/SPECS/cursor.spec
 
           spectool -g cursor.spec -C rpmbuild/SOURCES
-          rpmbuild -bs --define "_topdir $(pwd)/rpmbuild" --target $ARCH rpmbuild/SPECS/cursor.spec
+          rpmbuild -bs --define "_topdir $(pwd)/rpmbuild" --target $ARCH rpmbuild/SPECS/cursor.spec -vv
 
           ls rpmbuild/
           ls rpmbuild/SRPMS/
