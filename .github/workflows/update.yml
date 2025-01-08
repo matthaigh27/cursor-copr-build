@@ -19,7 +19,7 @@ jobs:
         shell: bash
         run: |
           LATEST_VERSION=$(curl -s https://download.todesktop.com/230313mzl4w4u92/latest-linux.yml | grep -m 1 '^version:' | sed 's/version: //')
-          CURRENT_VERSION=$(cat version)
+          CURRENT_VERSION=$(grep -m 1 '^Version:' cursor.spec | sed 's/Version:[[:space:]]*//')
 
           if [ "$(printf '%s\n' "$CURRENT_VERSION" "$LATEST_VERSION" | sort -V | head -n1)" = "$LATEST_VERSION" ] && [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
             echo "update_available=false" >> $GITHUB_OUTPUT
