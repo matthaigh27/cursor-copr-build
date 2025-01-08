@@ -35,6 +35,7 @@ jobs:
     #   matrix:
     #     arch: [x64, aarch64]
     runs-on: ubuntu-latest
+    container: fedora:latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -44,9 +45,6 @@ jobs:
           ARCH: ${{ matrix.arch }}
         run: |
           echo "Updating Cursor for architecture: $ARCH"
-
-          sudo apt-get update
-          sudo apt-get install -y rpm python3-pip
 
           pip3 install copr-cli
 
