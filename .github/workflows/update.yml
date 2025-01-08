@@ -46,7 +46,9 @@ jobs:
         run: |
           echo "Updating Cursor for architecture: $ARCH"
 
-          pip3 install copr-cli
+          dnf install python3-pip
+
+          pip install copr-cli
 
           mkdir -p ~/.config
           echo "${{ secrets.COPR_CONFIG }}" > ~/.config/copr
