@@ -59,6 +59,8 @@ jobs:
           spectool -g cursor.spec -C rpmbuild/SOURCES
           rpmbuild -bs --define "_topdir $(pwd)/rpmbuild" --target $ARCH rpmbuild/SPECS/cursor.spec
 
+          ls rpmbuild/
+          ls rpmbuild/SRPMS/
           SRPM_NAME=$(ls rpmbuild/SRPMS/cursor-*.src.rpm)
           copr-cli build --nowait cursor ${SRPM_NAME}
 
