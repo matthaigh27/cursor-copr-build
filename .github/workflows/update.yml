@@ -31,9 +31,9 @@ jobs:
   Update-Cursor:
     needs: Check-Version
     if: needs.Check-Version.outputs.update_available == 'true'
-    strategy:
-      matrix:
-        arch: [x64, aarch64]
+    # strategy:
+    #   matrix:
+    #     arch: [x64, aarch64]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -42,29 +42,8 @@ jobs:
       - name: Update Cursor for ${{ matrix.arch }}
         env:
           ARCH: ${{ matrix.arch }}
-          LATEST_VERSION: ${{ needs.Check-Version.outputs.latest_version }}
         run: |
           echo "Updating Cursor for architecture: $ARCH"
-
-          if [[ "$ARCH" == "x64" ]]; then
-            DOWNLOAD_URL="https://downloader.cursor.sh/linux/appImage/x64"
-          else
-            DOWNLOAD_URL="https://downloader.cursor.sh/linux/appImage/arm64"
-          fi
-
-          curl -LJO "$DOWNLOAD_URL"
-
-          LATEST_FILE=$(ls cursor*.AppImage)
-
-          sed -i \
-            -e 's|<version>|'"$LATEST_VERSION"'|g' \
-            -e 's|<source>|'"$LATEST_FILE"'|g' \
-            -e 's|<arch>|'"$ARCH"'|g' \
-            cursor.spec
-
-          echo "\n"
-          cat cursor.spec
-          echo "\n"
 
           sudo apt-get update
           sudo apt-get install -y rpm python3-pip
@@ -76,8 +55,8 @@ jobs:
 
           mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
           cp cursor.spec rpmbuild/SPECS/cursor.spec
-          cp "$LATEST_FILE" rpmbuild/SOURCES/
 
+          spectool -g cursor.spec -C rpmbuild/SOURCES
           rpmbuild -bs --define "_topdir $(pwd)/rpmbuild" --target $ARCH rpmbuild/SPECS/cursor.spec
 
           SRPM_NAME=$(ls rpmbuild/SRPMS/cursor-*.src.rpm)
@@ -101,8 +80,9 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
 
-          echo "$LATEST_VERSION" > version
-          git add version
+          sed -i "s/^Version: .*/Version: $LATEST_VERSION/" cursor.spec
+
+          git add cursor.spec
           git commit -m "Update Cursor to version $LATEST_VERSION"
           git push
 

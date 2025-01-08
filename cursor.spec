@@ -1,27 +1,23 @@
 Name:           cursor
-Version:        <version>
+Version:        0.44.15
 Release:        1%{?dist}
 Summary:        Cursor - The AI Code Editor
 
-License:        LicenseRef-Proprietary  # Update according to the actual license
+License:        LicenseRef-Proprietary
 URL:            https://www.cursor.com/
-Source0:        <source>
-
-ExclusiveArch:  <arch>
+Source0:        https://downloader.cursor.sh/linux/appImage/x64
 
 %description
 Built to make you extraordinarily productive, Cursor is the best way to code with AI.
 
 %prep
-# No prep required
+chmod +x %{_sourcedir}/x64
+APPIMAGE_EXTRACT_DIR="%{buildroot}" %{_sourcedir}/x64 --appimage-extract
 
 %build
 # No build required
 
 %install
-chmod +x %{SOURCE0}
-%{SOURCE0} --appimage-extract
-
 mkdir -p %{buildroot}/usr/local/cursor/
 cp -r squashfs-root/* %{buildroot}/usr/local/cursor/
 
