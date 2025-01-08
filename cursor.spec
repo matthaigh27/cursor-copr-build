@@ -1,5 +1,5 @@
 Name:           cursor
-Version:        0.44.15
+Version:        0.44.10
 Release:        1%{?dist}
 Summary:        Cursor - The AI Code Editor
 
