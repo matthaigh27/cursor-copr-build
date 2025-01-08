@@ -46,7 +46,7 @@ jobs:
         run: |
           echo "Updating Cursor for architecture: $ARCH"
 
-          dnf install python3-pip -y
+          dnf install python3-pip rpmdevtools -y
 
           pip install copr-cli
 
