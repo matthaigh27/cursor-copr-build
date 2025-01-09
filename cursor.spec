@@ -5,14 +5,26 @@ Summary:        Cursor - The AI Code Editor
 
 License:        LicenseRef-Proprietary
 URL:            https://www.cursor.com/
-Source0:        https://downloader.cursor.sh/linux/appImage/x64
+
+%ifarch x86_64
+Source0:        cursor-x86_64.AppImage
+%endif
+%ifarch aarch64
+Source0:        cursor-aarch64.AppImage
+%endif
 
 %description
 Built to make you extraordinarily productive, Cursor is the best way to code with AI.
 
 %prep
-chmod +x %{_sourcedir}/x64
-APPIMAGE_EXTRACT_DIR="%{buildroot}" %{_sourcedir}/x64 --appimage-extract
+%ifarch x86_64
+chmod +x %{_sourcedir}/cursor-x86_64.AppImage
+APPIMAGE_EXTRACT_DIR="%{buildroot}" %{_sourcedir}/cursor-x86_64.AppImage --appimage-extract
+%endif
+%ifarch aarch64
+chmod +x %{_sourcedir}/cursor-aarch64.AppImage
+APPIMAGE_EXTRACT_DIR="%{buildroot}" %{_sourcedir}/cursor-aarch64.AppImage --appimage-extract
+%endif
 
 %build
 # No build required
