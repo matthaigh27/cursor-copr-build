@@ -24,7 +24,7 @@ jobs:
           CURRENT_VERSION=$(grep "Version:" cursor.spec | awk '{print $2}')
           echo "Current version: $CURRENT_VERSION"
 
-          if [[ "$LATEST_VERSION" > "$CURRENT_VERSION" ]]; then
+          if [[ "$(printf '%s\n' "$CURRENT_VERSION" "$LATEST_VERSION" | sort -V | tail -n1)" == "$LATEST_VERSION" ]]; then
             echo "New version found: $LATEST_VERSION"
             sed -i "s/Version:.*/Version:        $LATEST_VERSION/" cursor.spec
             sed -i "s/^Source0:.*$/Source0:        ${LATEST_FILE}/" cursor.spec
