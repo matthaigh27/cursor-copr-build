@@ -53,12 +53,12 @@ jobs:
           curl -L https://downloader.cursor.sh/linux/appImage/x64 -o rpmbuild/SOURCES/cursor-x86_64.AppImage
           rpmbuild -bs --define "_topdir $(pwd)/rpmbuild" --target x86_64 rpmbuild/SPECS/cursor.spec
           SRPM_NAME=$(ls rpmbuild/SRPMS/cursor-*.src.rpm)
-          copr-cli build --nowait cursor ${SRPM_NAME}s
+          copr-cli build --nowait cursor ${SRPM_NAME}
 
           curl -L https://downloader.cursor.sh/linux/appImage/arm64 -o rpmbuild/SOURCES/cursor-aarch64.AppImage
           rpmbuild -bs --define "_topdir $(pwd)/rpmbuild" --target aarch64 rpmbuild/SPECS/cursor.spec
           SRPM_NAME=$(ls rpmbuild/SRPMS/cursor-*.src.rpm)
-          copr-cli build --nowait cursor ${SRPM_NAME}s
+          copr-cli build --nowait cursor ${SRPM_NAME}
 
   Create-Release:
     runs-on: ubuntu-latest
