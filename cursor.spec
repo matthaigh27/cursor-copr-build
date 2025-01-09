@@ -26,6 +26,7 @@ chmod +x %{_sourcedir}/cursor-aarch64.AppImage
 APPIMAGE_EXTRACT_DIR="%{buildroot}" %{_sourcedir}/cursor-aarch64.AppImage --appimage-extract
 %endif
 
+
 %build
 # No build required
 
