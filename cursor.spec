@@ -1,11 +1,11 @@
 Name:           cursor
-Version:        0.49.5
+Version:        0.49.6
 Release:        1%{?dist}
 Summary:        Cursor - The AI Code Editor
 
 License:        LicenseRef-Proprietary  # Update according to the actual license
 URL:            https://www.cursor.com/
-Source0:        Cursor-0.49.5-x86_64.AppImage
+Source0:        Cursor-0.49.6-x86_64.AppImage
 
 BuildArch:      x86_64
 ExclusiveArch:  x86_64
@@ -53,7 +53,7 @@ chmod -R 755 /usr/local/cursor/resources
 /usr/share/icons/hicolor/*/apps/cursor.png
 
 %changelog
-* Sat Apr 26 2025 Andrea Manenti <andrea.manenti@proton.me> - 0.49.5-1
+* Sat Apr 26 2025 Andrea Manenti <andrea.manenti@proton.me> - 0.49.6-1
   - Updated version
 * Fri Apr 18 2025 Andrea Manenti <andrea.manenti@proton.me> - 0.48.9-1
   - Updated paths and added ffmpeg dependency
